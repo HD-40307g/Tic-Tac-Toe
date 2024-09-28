@@ -1,90 +1,126 @@
+/* Universal reset */
 * {
   box-sizing: border-box;
-}
-
-body {
-  font-family: sans-serif;
-  margin: 20px;
+  margin: 0;
   padding: 0;
 }
 
-h1 {
-  margin-top: 0;
-  font-size: 22px;
-}
-
-h2 {
-  margin-top: 0;
-  font-size: 20px;
-}
-
-h3 {
-  margin-top: 0;
-  font-size: 18px;
-}
-
-h4 {
-  margin-top: 0;
-  font-size: 16px;
-}
-
-h5 {
-  margin-top: 0;
-  font-size: 14px;
-}
-
-h6 {
-  margin-top: 0;
-  font-size: 12px;
-}
-
-code {
-  font-size: 1.2em;
-}
-
-ul {
-  padding-inline-start: 20px;
-}
-
-* {
-  box-sizing: border-box;
-}
-
+/* Body styling */
 body {
-  font-family: sans-serif;
-  margin: 20px;
-  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: 'Arial', sans-serif;
+  background-color: #f0f0f0;
+}
+
+/* Headings styling */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Tic-tac-toe board styling */
+.board-row {
+  display: flex;
 }
 
 .square {
-  background: #fff;
-  border: 1px solid #999;
-  float: left;
-  font-size: 24px;
+  width: 100px;
+  height: 100px;
+  background-color: #fff;
+  border: 3px solid #333;
+  font-size: 36px;
   font-weight: bold;
-  line-height: 34px;
-  height: 34px;
-  margin-right: -1px;
-  margin-top: -1px;
-  padding: 0;
-  text-align: center;
-  width: 34px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s, transform 0.3s;
+  cursor: pointer;
 }
 
-.board-row:after {
-  clear: both;
-  content: '';
-  display: table;
+.square:hover {
+  background-color: #f9f9f9;
+  transform: scale(1.1);
 }
 
-.status {
-  margin-bottom: 10px;
-}
+/* Game wrapper styling */
 .game {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #333;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .game-info {
-  margin-left: 20px;
+  margin-top: 20px;
+  color: #fff;
+  font-size: 18px;
 }
+
+.status {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #ffcc00;
+}
+
+/* Make the game responsive */
+@media (max-width: 600px) {
+  .square {
+    width: 80px;
+    height: 80px;
+    font-size: 30px;
+  }
+
+  .status {
+    font-size: 20px;
+  }
+
+  .game-info {
+    font-size: 16px;
+  }
+}
+
+/* Button animations */
+button {
+  background-color: #ffcc00;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #ffdd33;
+}
+
+/* Center the game on the screen */
+html, body {
+  height: 100%;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.square {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
