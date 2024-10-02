@@ -40,6 +40,10 @@ h1, h2, h3, h4, h5, h6 {
   cursor: pointer;
 }
 
+.winning-square {
+  background-color: yellow;
+}
+
 .square:hover {
   background-color: #f9f9f9;
   transform: scale(1.1);
