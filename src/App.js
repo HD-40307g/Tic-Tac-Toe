@@ -1,49 +1,59 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 function Square({ value, onSquareClick, isWinningSquare }) {
-  return <button className={`square ${isWinningSquare ? "winning-square" : ""}`} onClick={onSquareClick}>{value}</button>
+  return (
+    <button
+      className={`square ${isWinningSquare ? "winning-square" : ""}`}
+      onClick={onSquareClick}
+      aria-label={`Square ${value || ''}`}
+    >
+      {value}
+    </button>
+  );
 }
 
 function Board({ xIsNext, squares, onPlay }) {
-  function handleClick(i) {
-    const winnerInfo = calculateWinner(squares)
-    if (winnerInfo?.winner || squares[i]) {
-      return;
-    }
+  const handleClick = useCallback((i) => {
+    const winnerInfo = calculateWinner(squares);
+    if (winnerInfo?.winner || squares[i]) return;
+
     const nextSquares = squares.slice();
-    if (xIsNext) {
-      nextSquares[i] = "X"
-    } else {
-      nextSquares[i] = "O"
-    }
-    onPlay(nextSquares);
-  }
+    nextSquares[i] = xIsNext ? "X" : "O";
+
+    const row = Math.floor(i / 3) + 1;
+    const col = (i % 3) + 1;
+    onPlay(nextSquares, `row ${row}, col ${col}`);
+  }, [squares, xIsNext, onPlay]);
 
   const winnerInfo = calculateWinner(squares);
-  const winner = winnerInfo ? winnerInfo.winner : null;
-  const winningLine = winnerInfo ? winnerInfo.winningLine : null;
+  const winner = winnerInfo?.winner || null;
+  const winningLine = winnerInfo?.winningLine || [];
 
   let status;
   if (winner) {
-    status = "Winner: " + winner;
+    status = `Winner: ${winner}`;
   } else if (squares.every(square => square !== null)) {
     status = "It's a draw!";
   } else {
-    status = "Next player: " + (xIsNext ? "x" : "O");
+    status = `Next player: ${xIsNext ? "X" : "O"}`;
   }
 
-  const boardSize = 3;
-  const boardRows = [];
-  for (let row = 0; row < boardSize; row++) {
-    const boardSquares = [];
-    for (let col = 0; col < boardSize; col++) {
-      const index = row * boardSize + col;
-      const isWinningSquare = Array.isArray(winningLine) && winningLine.includes(index);
-      boardSquares.push(<Square key={index} value={squares[index]} onSquareClick={() => handleClick(index)} isWinningSquare={isWinningSquare}/>);
-    }
-    boardRows.push(<div key={row} className="board-row">{boardSquares}</div>);
-  }
+  const boardRows = Array.from({ length: 3 }, (_, row) => {
+    const boardSquares = Array.from({ length: 3 }, (_, col) => {
+      const index = row * 3 + col;
+      const isWinningSquare = winningLine.includes(index);
+      return (
+        <Square
+          key={index}
+          value={squares[index]}
+          onSquareClick={() => handleClick(index)}
+          isWinningSquare={isWinningSquare}
+        />
+      );
+    });
+
+    return <div key={row} className="board-row">{boardSquares}</div>;
+  });
 
   return (
     <>
@@ -55,14 +65,9 @@ function Board({ xIsNext, squares, onPlay }) {
 
 function calculateWinner(squares) {
   const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6]
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
   ];
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
@@ -74,41 +79,43 @@ function calculateWinner(squares) {
 }
 
 export default function Game() {
-  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [history, setHistory] = useState([{ squares: Array(9).fill(null), moveLocation: null }]);
   const [currentMove, setCurrentMove] = useState(0);
   const [isAscending, setIsAscending] = useState(true);
-  const xIsNext = currentMove % 2 === 0;
-  const currentSquares = history[currentMove];
 
-  function handlePlay(nextSquares) {
-    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+  const xIsNext = currentMove % 2 === 0;
+  const currentSquares = history[currentMove].squares;
+
+  const handlePlay = useCallback((nextSquares, moveLocation) => {
+    const nextHistory = [...history.slice(0, currentMove + 1), { squares: nextSquares, moveLocation }];
     setHistory(nextHistory);
     setCurrentMove(nextHistory.length - 1);
-  }
-  
-  function jumpTo(nextMove) {
+  }, [history, currentMove]);
+
+  const jumpTo = useCallback((nextMove) => {
     setCurrentMove(nextMove);
-  }
+  }, []);
 
-  function toggleSortOrder () {
+  const toggleSortOrder = useCallback(() => {
     setIsAscending(!isAscending);
-  }
+  }, [isAscending]);
 
-  const moves = history.map((squares, move) => {
-    let description;
-    if (move > 0) {
-      description = "Go to move #" + move;
-    } else {
-      description = "Go to game start";
-    }
+  const moves = history.map((step, move) => {
+    const { moveLocation } = step;
+    const description = move
+      ? `Go to move #${move} (${moveLocation})`
+      : "Go to game start";
+
     return (
       <li key={move}>
-        <button onClick={() => jumpTo(move)}>{description}</button>
+        <button onClick={() => jumpTo(move)}>
+          {description}
+        </button>
       </li>
     );
   });
 
-  const sortedMoves = isAscending ? moves : moves.slice().reverse();
+  const sortedMoves = isAscending ? moves : [...moves].reverse();
 
   return (
     <div className="game">
@@ -116,8 +123,10 @@ export default function Game() {
         <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
       </div>
       <div className="game-info">
-        <a>{"You are at the move # " + currentMove}</a>
-        <button onClick={toggleSortOrder}>Sort by: {isAscending ? "Descending" : "Ascending"}</button>
+        <p>You are at move #{currentMove}</p>
+        <button onClick={toggleSortOrder}>
+          Sort by: {isAscending ? "Descending" : "Ascending"}
+        </button>
         <ol>{sortedMoves}</ol>
       </div>
     </div>
